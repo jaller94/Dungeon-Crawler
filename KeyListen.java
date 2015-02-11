@@ -16,7 +16,8 @@ public class KeyListen implements KeyListener
 		UP('w'), UP2(KeyEvent.VK_UP),
 		DOWN('s'), DOWN2(KeyEvent.VK_DOWN),
 		LEFT('a'), LEFT2(KeyEvent.VK_LEFT),
-		RIGHT('d'), RIGHT2(KeyEvent.VK_RIGHT);
+		RIGHT('d'), RIGHT2(KeyEvent.VK_RIGHT),
+		PICKUP('e'), DEBUG('p'), DEBUGX('l');
 		
 		private char keyChar = '0';
 		private int keyInt;
@@ -46,7 +47,6 @@ public class KeyListen implements KeyListener
 	}
 	public void keyTyped(KeyEvent e)
 	{
-		System.out.println("Key detected!");
 		if(e.getKeyChar() == Action.UP.keyChar() || e.getKeyCode() == Action.UP2.keyInt())
 		{
 			Game.move(1);
@@ -62,6 +62,18 @@ public class KeyListen implements KeyListener
 		if(e.getKeyChar() == Action.RIGHT.keyChar() || e.getKeyCode() == Action.RIGHT2.keyInt())
 		{
 			Game.move(4);
+		}
+		if(e.getKeyChar() == Action.PICKUP.keyChar())
+		{
+			Game.pickUp();
+		}
+		if(e.getKeyChar() == Action.DEBUG.keyChar())
+		{
+			Game.debug();
+		}
+		if(e.getKeyChar() == Action.DEBUGX.keyChar())
+		{
+			Game.debugXtra();
 		}
 	}
 	public void keyReleased(KeyEvent e)

@@ -7,12 +7,13 @@
 
 public class Floor
 {
-	public static int mapX;
-	public static int mapY;
+	public int mapX;
+	public int mapY;
 	
-	public static Actor Player;
+	public Actor Player;
+	public Item[] inv = new Item[9];
 	
-	public static Room[][] maps = new Room[10][10];
+	public Room[][] maps = new Room[10][10];
 	
 	public Floor(int mapX, int mapY)
 	{
@@ -20,7 +21,7 @@ public class Floor
 		this.mapY = mapY;
 	}
 	
-	public static void genMap(int mapID)
+	public void genMap(int mapID)
 	{
 		maps[mapX][mapY] = new Room(mapID);
 	}
