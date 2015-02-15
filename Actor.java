@@ -17,6 +17,14 @@ public class Actor
 	*/
 	public int x,y;
 	
+	public int skin;
+	public int pants;
+	public int armor;
+	public int hat;
+	public int weapon;
+	public int shield;
+	
+	
 	public Actor(int actorID, int x, int y)
 	{
 		this.actorID = actorID;
@@ -43,6 +51,12 @@ public class Actor
 				break;
 			default:
 				this.actorType = -1;
+				this.skin = 1710;
+				this.pants = 1503;
+				this.armor = 1806;
+				this.hat = 1508;
+				this.weapon = 1600;
+				this.shield = 0;
 				break;
 		}
 	}

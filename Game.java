@@ -29,7 +29,7 @@ import java.util.Arrays;
 		+Items not drawing properly
 		+Player position in mapActors not updating
 		+Objects drawing over each other
-
+		
 		+Player cannot pick up items
 		
 	ToDo @ February 11, 2015
@@ -40,14 +40,43 @@ import java.util.Arrays;
 			-Static inventory
 			-Save state of actors, items, objects, ect.
 				-Should not revert to template map!
+		-Create GUI
+			-Allow item selection
+			-Drop selected item
+		-Interaction with Actors
+			-Attacking
+			-Player HP
+			-NPC HP (Randomly Generated)
+			-AC?
+			-Damage Types? (Slashing, Blunt, Stabbing, Piercing)
+			-AI
+				-Movement
+					-Path-finding
+						-Calculate Hypotenuse
+						-Get X/Y Differences
+						-Fulfil
+						-Object Avoidance
+				-Attacking
+					-Player is near?
+					-When to put in the line of methods
 	
 	Changelog 
 */
 
 public class Game extends JPanel
 {
-	private static final int tW = 32;
-	private static final int tH = 32;
+	private static final int tWP = 15;
+	private static final int tHP = 15;
+	
+	private static final int tW = 64;
+	private static final int tH = 64;
+
+	public static int playerSkin;
+	public static int playerWeapon;
+	public static int playerShield;
+	public static int playerPants;
+	public static int playerHat;
+	public static int playerArmor;
 	
 	private static JFrame frame;
 	
@@ -72,7 +101,7 @@ public class Game extends JPanel
 		
 		Game panel = new Game();
 		
-		Dimension panelSize = new Dimension(640, 480);
+		Dimension panelSize = new Dimension(1280,960);
 		
 		KeyListen objKeyListener = new KeyListen();
 		
@@ -88,7 +117,7 @@ public class Game extends JPanel
 		
 		frame.addKeyListener(objKeyListener);
 		frame.add(panel);
-		frame.setSize(646,509);
+		frame.setSize(1286,989);
 	}
 	
 	public Game()
@@ -124,6 +153,19 @@ public class Game extends JPanel
 		}
 	}
 
+	
+	private static void drawPlayer()
+	{
+		int x = objFloor.Player.x;
+		int y = objFloor.Player.y;
+		g2.drawImage(tile[objFloor.Player.skin], x*tW, y*tH, null);
+		g2.drawImage(tile[objFloor.Player.pants], x*tW, y*tH, null);
+		g2.drawImage(tile[objFloor.Player.armor], x*tW, y*tH, null);
+		g2.drawImage(tile[objFloor.Player.hat], x*tW, y*tH, null);
+		g2.drawImage(tile[objFloor.Player.weapon], x*tW, y*tH, null);
+		g2.drawImage(tile[objFloor.Player.shield], x*tW, y*tH, null);
+	}
+	
 	private static void makeItems()
 	{
 		int p = 0;
@@ -155,6 +197,12 @@ public class Game extends JPanel
 					{
 						objFloor.Player = new Actor(0, i, j);
 						currentRoom.mapActors[j][i] = 0;
+						objFloor.Player.skin = 1482;
+						objFloor.Player.pants = 1502;
+						objFloor.Player.armor = 1517;
+						objFloor.Player.hat = 1794;
+						objFloor.Player.weapon = 1491;
+						objFloor.Player.shield = 1557;
 					}
 					else if(currentRoom.actors[actorIndex] == null && currentRoom.mapActors[j][i] != -1)
 					{
@@ -198,14 +246,20 @@ public class Game extends JPanel
 				//Actors
 				for(int actorIndex = 0; Game.currentRoom.actors[actorIndex] != null; actorIndex++)	
 				{
-					int actorX = Game.currentRoom.actors[actorIndex].x;
-					int actorY = Game.currentRoom.actors[actorIndex].y;
+					Actor currentActor = Game.currentRoom.actors[actorIndex];
+					int actorX = currentActor.x;
+					int actorY = currentActor.y;
 					if(Game.currentRoom.mapActors[actorY][actorX] != -1)
 					{
-						g2D.drawImage(tile[Game.currentRoom.mapActors[actorY][actorX]], actorX*tW, actorY*tH, null);
+						g2D.drawImage(tile[currentActor.skin], actorX*tW, actorY*tH, null);
+						g2D.drawImage(tile[currentActor.pants], actorX*tW, actorY*tH, null);
+						g2D.drawImage(tile[currentActor.armor], actorX*tW, actorY*tH, null);
+						g2D.drawImage(tile[currentActor.hat], actorX*tW, actorY*tH, null);
+						g2D.drawImage(tile[currentActor.weapon], actorX*tW, actorY*tH, null);
+						g2D.drawImage(tile[currentActor.shield], actorX*tW, actorY*tH, null);
 					}
 				}
-				g2D.drawImage(tile[132], Game.objFloor.Player.x*tW, Game.objFloor.Player.y*tH, null);
+				drawPlayer();
 			}
 		};
 		try
@@ -468,16 +522,27 @@ public class Game extends JPanel
 	private static void makeTiles()
 	{
 		BufferedImage bigTile = Game.toBufferedImage(Game.importImage("Resources/Tiles.png")); //Importing the tile image
-		int rows = 48, cols = 64; //The size of the tile image
-		tile = new BufferedImage[rows * cols]; //Defining our tile array (Declared as a class variable)
-		for(int i=0; i<rows; i++) //Begginign a coord sweep
+		int rows = 42, cols = 57; //The size of the tile image
+		tile = new BufferedImage[rows * cols + 1]; //Defining our tile array (Declared as a class variable)
+		for(int i=0; i<rows; i++) //Beginning a coord sweep
 		{
 			for(int j=0; j<cols;j++)
 			{
-				tile[(i*cols) + j] = bigTile.getSubimage(j * tW, i * tH, tW, tH); //Assigning each tile an index within the tile array
+				tile[(i*cols) + j] = bigTile.getSubimage(2*j + (j * tWP), 2*i + (i * tHP), tWP, tHP); //Assigning each tile an index within the tile array
+				tile[(i*cols) + j] = resizeImage(tile[(i*cols) + j]);
 			}
 		}
+		tile[0] = tile[171]; //Making tile 0 transparent (air)
 	}
 
+	private static BufferedImage resizeImage(BufferedImage originalImage)
+	{
+		BufferedImage resizedImage = new BufferedImage(tW, tH, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = resizedImage.createGraphics();
+		g.drawImage(originalImage, 0, 0, tW, tH, null);
+		g.dispose();
+ 
+		return resizedImage;
+	}
 
 }

@@ -1,4 +1,0 @@
-Items are picked up by stepping over them and pressing e
-	-Only needs a check to see if player is in the same spot (Player.x = item.x, Player.y = item.y)
-	-Makes picking up an item take a turn
-	-
