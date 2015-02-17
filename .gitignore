@@ -2,4 +2,8 @@ Logs
 *.class
 SSH.pub
 Backup
+<<<<<<< HEAD
+=======
+*.sh
+>>>>>>> origin/master
 *.bat
