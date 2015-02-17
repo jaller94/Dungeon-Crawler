@@ -12,6 +12,8 @@ public class Item
 	public int spt; //What spot is it?
 	public int ac;  //What is its armor amount?
 	
+	public int id;
+	
 	public int x, y, index;
 	
 	public Item(int id, int level, int x, int y)
@@ -27,6 +29,8 @@ public class Item
 				this.type = 0;
 				break;
 		}
+		
+		this.id = id;
 		this.type = type;
 		this.level = level;
 		this.x = x;

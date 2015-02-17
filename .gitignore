@@ -2,3 +2,4 @@ Logs
 *.class
 SSH.pub
 Backup
+*.bat
