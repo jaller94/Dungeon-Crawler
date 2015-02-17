@@ -29,7 +29,7 @@ import java.util.Arrays;
 		+Items not drawing properly
 		+Player position in mapActors not updating
 		+Objects drawing over each other
-		
+			
 		+Player cannot pick up items
 		
 	ToDo @ February 11, 2015
@@ -40,7 +40,7 @@ import java.util.Arrays;
 			-Static inventory
 			-Save state of actors, items, objects, ect.
 				-Should not revert to template map!
-		-Create GUI
+		~Create GUI
 			-Allow item selection
 			-Drop selected item
 		-Interaction with Actors
@@ -59,8 +59,47 @@ import java.util.Arrays;
 				-Attacking
 					-Player is near?
 					-When to put in the line of methods
+					
 	
-	Changelog 
+	Changelog @ February 16, 2015
+		-GUI Started
+			-Picked up items display on inventory
+			-Hotbar created
+			
+	Issues @ February 16, 2015
+		-No known issues
+	ToDo @ February 16, 2015
+		-Begin making 5 basic maps
+			-4 basic maps
+			-1 entrance map
+		-Work on Room-level Movement
+			-Static inventory
+			-Save state of actors, items, objects, ect.
+				-Should not revert to template map!
+		~Create GUI
+			-Allow item selection
+				-Identify item selection
+			-Drop selected item
+		-Interaction with Actors
+			-Attacking
+			-Player HP
+			-NPC HP (Randomly Generated)
+			-AC?
+			-Damage Types? (Slashing, Blunt, Stabbing, Piercing)
+			-AI
+				-Movement
+					-Path-finding
+						-Calculate Hypotenuse
+						-Get X/Y Differences
+						-Fulfil
+						-Object Avoidance
+				-Attacking
+					-Player is near?
+					-When to put in the line of methods
+					
+	Changelot @ February 17, 2015
+		-Graphics now scale based on tW and tH
+			-Scales properly based on this
 */
 
 public class Game extends JPanel
@@ -68,17 +107,19 @@ public class Game extends JPanel
 	private static final int tWP = 15;
 	private static final int tHP = 15;
 	
-	private static final int tW = 64;
-	private static final int tH = 64;
+	private static final int tW = 50;
+	private static final int tH = 50;
 
 	public static int playerSkin;
 	public static int playerWeapon;
 	public static int playerShield;
-	public static int playerPants;
+	public static int playerPants;	
 	public static int playerHat;
 	public static int playerArmor;
 	
 	private static JFrame frame;
+	
+	public static int selectedItem = 0;
 	
 	public static Floor objFloor = new Floor(0,0);
 	
@@ -91,6 +132,7 @@ public class Game extends JPanel
 	
 	private static Graphics2D g2;
 	
+	private static BufferedImage markerTile = null;
 	private static BufferedImage[] tile = null;
 	
 	public static void main(String args[])
@@ -101,7 +143,7 @@ public class Game extends JPanel
 		
 		Game panel = new Game();
 		
-		Dimension panelSize = new Dimension(1280,960);
+		Dimension panelSize = new Dimension(tW * 20,tH * 15);
 		
 		KeyListen objKeyListener = new KeyListen();
 		
@@ -117,18 +159,74 @@ public class Game extends JPanel
 		
 		frame.addKeyListener(objKeyListener);
 		frame.add(panel);
-		frame.setSize(1286,989);
+		frame.setSize((tW*20)+6,(tH*15)+29);
 	}
 	
 	public Game()
 	{
 		this.frame = new JFrame("0c370tRPG");
 	}
-	
+		
 	private static void newRoom(int mapID)
 	{
 		objFloor.genMap(mapID);
 		currentRoom = objFloor.maps[objFloor.mapY][objFloor.mapX];
+	}
+	
+	private static void drawGUI()
+	{
+		/*
+		
+		Drawing out all of the GUI happens here
+		Only the hotbar has been added in so far
+		
+		GUI may be moved to seperate class later
+		
+		*/
+		
+		//Adding the background of the hotbar
+		g2.drawImage(tile[2193], 6*tW, 14*tH, null);
+		for(int i=7; i<=12; i++)
+		{
+			g2.drawImage(tile[2194], i*tW, 14*tH, null);
+		}
+		g2.drawImage(tile[2195], 13*tW, 14*tH, null);
+
+		//Creating and setting our font
+		//In this case we are using "kenPixel"
+		//From the kenney pack
+		Font kenPixel10 = null;
+		try
+		{
+			kenPixel10 = Font.createFont(Font.TRUETYPE_FONT, Game.class.getResource("Resources/kenpixel.ttf").openStream()).deriveFont(10f);
+			g2.setFont(kenPixel10);
+		} catch(Exception e){e.printStackTrace();}
+
+		
+		//This draws bars to make it more clear
+		//What slots are where for the inventory
+		//This will probably be changed
+		for(int i=0; i<7; i++)
+		{
+			g2.setColor(Color.WHITE);
+			g2.drawRoundRect((i+6)*tW + 1, (14*tH) + 2, tW - 1, tH - 6, 4, 4);
+		}
+		g2.drawRoundRect(13*tW + 1, 14*tH + 2, tW - 3, tH- 6, 4, 4);
+		g2.setColor(Color.BLACK);
+
+		//Draws the numbers for the hotbat
+		for(int i=0; i<8; i++)
+			g2.drawString("" + (i + 1), ((i + 6)*tW) + 4, (14*tH) + 12);
+		
+		//Draws out the current inventory
+		//onto the hotbar
+		for(int invIndex = 0; Game.objFloor.inv[invIndex] != null; invIndex++)
+			g2.drawImage(tile[Game.objFloor.inv[invIndex].id], (6 + invIndex) * tW, 14*tH, null);
+		
+		if(selectedItem == 0)
+			g2.drawImage(markerTile, (6 + selectedItem)*tW + (tW/3), 14*tH, null);
+		else
+			g2.drawImage(markerTile, (6 + selectedItem - 1)*tW + (tW/3), 14*tH, null);
 	}
 	
 	private static void drawMap()
@@ -153,6 +251,12 @@ public class Game extends JPanel
 		}
 	}
 
+	public static void select(int input)
+	{
+		selectedItem = input;
+		frame.getContentPane().validate();
+		frame.getContentPane().repaint();
+	}
 	
 	private static void drawPlayer()
 	{
@@ -259,6 +363,10 @@ public class Game extends JPanel
 						g2D.drawImage(tile[currentActor.shield], actorX*tW, actorY*tH, null);
 					}
 				}
+				
+				//GUI
+				drawGUI();				
+				
 				drawPlayer();
 			}
 		};
@@ -447,6 +555,26 @@ public class Game extends JPanel
 		}
 	}
 	
+	public static void drop()
+	{
+		System.out.println("Dropping item");
+		if(currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] == 0)
+		{
+			int itemIndex = 0;
+			for(int i=0; currentRoom.items[i] != null; i++)
+			{
+				itemIndex = i;
+			}
+			objFloor.inv[selectedItem].x = objFloor.Player.x;
+			objFloor.inv[selectedItem].y = objFloor.Player.y;
+			currentRoom.items[itemIndex] = objFloor.inv[selectedItem];
+			currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] = objFloor.inv[selectedItem].id;
+			objFloor.inv[selectedItem] = null;
+		}
+		frame.getContentPane().validate();
+		frame.getContentPane().repaint();
+	}
+	
 	public void paint(Graphics g)
 	{
 		Graphics2D g2 = (Graphics2D)g;
@@ -529,17 +657,18 @@ public class Game extends JPanel
 			for(int j=0; j<cols;j++)
 			{
 				tile[(i*cols) + j] = bigTile.getSubimage(2*j + (j * tWP), 2*i + (i * tHP), tWP, tHP); //Assigning each tile an index within the tile array
-				tile[(i*cols) + j] = resizeImage(tile[(i*cols) + j]);
+				tile[(i*cols) + j] = resizeImage(tile[(i*cols) + j], tW, tH);
 			}
 		}
 		tile[0] = tile[171]; //Making tile 0 transparent (air)
+		markerTile = resizeImage(tile[2276], tW/2, tH/2);
 	}
 
-	private static BufferedImage resizeImage(BufferedImage originalImage)
+	private static BufferedImage resizeImage(BufferedImage originalImage, int x, int y)
 	{
 		BufferedImage resizedImage = new BufferedImage(tW, tH, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = resizedImage.createGraphics();
-		g.drawImage(originalImage, 0, 0, tW, tH, null);
+		g.drawImage(originalImage, 0, 0, x, y, null);
 		g.dispose();
  
 		return resizedImage;
