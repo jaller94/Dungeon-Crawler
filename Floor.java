@@ -2,8 +2,7 @@
 
 	Handles the connection between Game class
 	and Rooms.
-	Also holds persistant data i.e. Player Actor && Inventory
-	
+
 */
 
 public class Floor
@@ -12,7 +11,7 @@ public class Floor
 	public int mapY;
 	
 	public Actor Player;
-	public Item[] inv = new Item[8];
+	public Item[] inv = new Item[9];
 	
 	public Room[][] maps = new Room[10][10];
 	

@@ -48,53 +48,33 @@ public class KeyListen implements KeyListener
 	public void keyTyped(KeyEvent e)
 	{
 		if(e.getKeyChar() == Action.UP.keyChar() || e.getKeyCode() == Action.UP2.keyInt())
+		{
 			Game.move(1);
-		
+		}
 		if(e.getKeyChar() == Action.DOWN.keyChar() || e.getKeyCode() == Action.DOWN2.keyInt())
+		{
 			Game.move(2);
-		
+		}
 		if(e.getKeyChar() == Action.LEFT.keyChar() || e.getKeyCode() == Action.LEFT2.keyInt())
+		{
 			Game.move(3);
-		
+		}
 		if(e.getKeyChar() == Action.RIGHT.keyChar() || e.getKeyCode() == Action.RIGHT2.keyInt())
+		{
 			Game.move(4);
-		
+		}
 		if(e.getKeyChar() == Action.PICKUP.keyChar())
+		{
 			Game.pickUp();
-		
+		}
 		if(e.getKeyChar() == Action.DEBUG.keyChar())
+		{
 			Game.debug();
-		
+		}
 		if(e.getKeyChar() == Action.DEBUGX.keyChar())
+		{
 			Game.debugXtra();
-		
-		if(e.getKeyChar() == '1')
-			Game.select(1);
-		
-		if(e.getKeyChar() == '2')
-			Game.select(2);
-		
-		if(e.getKeyChar() == '3')
-			Game.select(3);
-		
-		if(e.getKeyChar() == '4')
-			Game.select(4);
-		
-		if(e.getKeyChar() == '5')
-			Game.select(5);
-		
-		if(e.getKeyChar() == '6')
-			Game.select(6);
-		
-		if(e.getKeyChar() == '7')
-			Game.select(7);
-		
-		if(e.getKeyChar() == '8')
-			Game.select(8);
-		
-		if(e.getKeyChar() == 'q')
-			Game.drop();
-		
+		}
 	}
 	public void keyReleased(KeyEvent e)
 	{
