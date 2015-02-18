@@ -9,11 +9,17 @@ public class Actor
 	#----------------------------------#
 	Correct Values for actorType include:
 	
-	0, used to indicate unkown monster type
+	0, used to indicate unknown monster type
 	1, basic land monster, will not be able to cross water tiles, or blocked tiles
 	2, swimming monster, only allowed in water, not on ground tiles
 	3, flying monster, allowed on ground, water, and blocked tiles?
 	
+	#----------------------------------#
+	
+	Monster IDs below:
+	1 - Green Slime
+		No clothing/Weapons
+	2 - ??
 	*/
 	public int x,y;
 	
@@ -23,6 +29,8 @@ public class Actor
 	public int hat;
 	public int weapon;
 	public int shield;
+	
+	public String name = null;
 	
 	
 	public Actor(int actorID, int x, int y)
@@ -49,7 +57,18 @@ public class Actor
 			case 0:
 				this.actorType = 0;
 				break;
-			default:
+			case 1:
+				this.name = "Green Slime"
+				this.actorType = 1;
+				this.skin = 1824;
+				this.pants = 0;
+				this.armor = 0;
+				this.hat = 0;
+				this.weapon = 0;
+				this.shield = 0;
+				break;
+			case 666:
+				this.name = "Bad-ass Blue Bitch"
 				this.actorType = -1;
 				this.skin = 1710;
 				this.pants = 1503;
@@ -57,6 +76,9 @@ public class Actor
 				this.hat = 1508;
 				this.weapon = 1600;
 				this.shield = 0;
+				break;
+			default:
+				this.actorType = 0;
 				break;
 		}
 	}

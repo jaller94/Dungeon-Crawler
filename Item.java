@@ -8,9 +8,9 @@ public class Item
 	/*Potions*/
 	public int efct; //What effect does the potion have? 
 	public int str;  //How strong is the potion?
-	/*Armor*/
+	/*Armour*/
 	public int spt; //What spot is it?
-	public int ac;  //What is its armor amount?
+	public int ac;  //What is its armour amount?
 	
 	public int id;
 	

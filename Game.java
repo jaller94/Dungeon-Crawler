@@ -7,60 +7,6 @@ import java.util.Arrays;
 
 /*
 
-	Changelog February 11, 2015
-		-Added basics of Item system
-			-Built Item Class
-			-Added inv array to Floor
-			-Started pickup() method
-				-Needs work
-				-Adds item to player inventory
-				-Does not delete item from ground!
-		-Built Debug System
-			-Press "p" to get console output
-			-Reports all actor positions, Player Position, and Item positions
-			-Press "l" for more detailed output
-		-Started on random item Generation
-			-i.e. (int)Math.ceil(Math.random() * Math.random * 10 * level);
-			-Allows for a different game each time (duh)
-			-NEEDS BALANCING!
-				-after the combat gets put in, can't balance a scale that doesn't exist
-			
-	Issues @ February 11, 2015
-		+Items not drawing properly
-		+Player position in mapActors not updating
-		+Objects drawing over each other
-			
-		+Player cannot pick up items
-		
-	ToDo @ February 11, 2015
-		-Begin making 5 basic maps
-			-4 basic maps
-			-1 entrance map
-		-Work on Room-level Movement
-			-Static inventory
-			-Save state of actors, items, objects, ect.
-				-Should not revert to template map!
-		~Create GUI
-			-Allow item selection
-			-Drop selected item
-		-Interaction with Actors
-			-Attacking
-			-Player HP
-			-NPC HP (Randomly Generated)
-			-AC?
-			-Damage Types? (Slashing, Blunt, Stabbing, Piercing)
-			-AI
-				-Movement
-					-Path-finding
-						-Calculate Hypotenuse
-						-Get X/Y Differences
-						-Fulfil
-						-Object Avoidance
-				-Attacking
-					-Player is near?
-					-When to put in the line of methods
-					
-	
 	Changelog @ February 16, 2015
 		-GUI Started
 			-Picked up items display on inventory
@@ -68,6 +14,7 @@ import java.util.Arrays;
 			
 	Issues @ February 16, 2015
 		-No known issues
+	
 	ToDo @ February 16, 2015
 		-Begin making 5 basic maps
 			-4 basic maps
@@ -100,6 +47,7 @@ import java.util.Arrays;
 	Changelot @ February 17, 2015
 		-Graphics now scale based on tW and tH
 			-Scales properly based on this
+
 */
 
 public class Game extends JPanel
@@ -113,13 +61,14 @@ public class Game extends JPanel
 	public static int playerSkin;
 	public static int playerWeapon;
 	public static int playerShield;
-	public static int playerPants;	
+	public static int playerPants;
 	public static int playerHat;
 	public static int playerArmor;
 	
 	private static JFrame frame;
 	
 	public static int selectedItem = 0;
+	public static int selectedItem2 = 1;
 	
 	public static Floor objFloor = new Floor(0,0);
 	
@@ -133,6 +82,7 @@ public class Game extends JPanel
 	private static Graphics2D g2;
 	
 	private static BufferedImage markerTile = null;
+	private static BufferedImage markerTile2 = null;
 	private static BufferedImage[] tile = null;
 	
 	public static void main(String args[])
@@ -220,13 +170,14 @@ public class Game extends JPanel
 		
 		//Draws out the current inventory
 		//onto the hotbar
-		for(int invIndex = 0; Game.objFloor.inv[invIndex] != null; invIndex++)
-			g2.drawImage(tile[Game.objFloor.inv[invIndex].id], (6 + invIndex) * tW, 14*tH, null);
+		for(int invIndex = 0; invIndex < Game.objFloor.inv.length; invIndex++)
+		{
+			if(Game.objFloor.inv[invIndex] != null)
+				g2.drawImage(tile[Game.objFloor.inv[invIndex].id], (6 + invIndex) * tW, 14*tH, null);
+		}
 		
-		if(selectedItem == 0)
-			g2.drawImage(markerTile, (6 + selectedItem)*tW + (tW/3), 14*tH, null);
-		else
-			g2.drawImage(markerTile, (6 + selectedItem - 1)*tW + (tW/3), 14*tH, null);
+		g2.drawImage(markerTile, (6 + selectedItem)*tW + (tW/3), 14*tH, null);
+		g2.drawImage(markerTile2, (6+selectedItem2)*tW + (tW/3), 14*tH, null);
 	}
 	
 	private static void drawMap()
@@ -236,6 +187,7 @@ public class Game extends JPanel
 			for(int i=0; i<20; i++)
 			{
 				Game.g2.drawImage(tile[currentRoom.map[j][i]], i*tW, j*tH, null);
+				Game.g2.drawImage(tile[currentRoom.map2[j][i]], i*tW, j*tH, null);
 			}
 		}
 	}
@@ -253,7 +205,18 @@ public class Game extends JPanel
 
 	public static void select(int input)
 	{
-		selectedItem = input;
+		if(selectedItem2 != input - 1)
+			selectedItem = input - 1;
+		
+		frame.getContentPane().validate();
+		frame.getContentPane().repaint();
+	}
+	
+	public static void select2(int input)
+	{
+		if(selectedItem != input - 1)
+			selectedItem2 = input -1;
+		
 		frame.getContentPane().validate();
 		frame.getContentPane().repaint();
 	}
@@ -266,8 +229,10 @@ public class Game extends JPanel
 		g2.drawImage(tile[objFloor.Player.pants], x*tW, y*tH, null);
 		g2.drawImage(tile[objFloor.Player.armor], x*tW, y*tH, null);
 		g2.drawImage(tile[objFloor.Player.hat], x*tW, y*tH, null);
-		g2.drawImage(tile[objFloor.Player.weapon], x*tW, y*tH, null);
-		g2.drawImage(tile[objFloor.Player.shield], x*tW, y*tH, null);
+		if(objFloor.inv[selectedItem] != null)
+			g2.drawImage(tile[objFloor.inv[selectedItem].id], x*tW, y*tH, null);
+		if(objFloor.inv[selectedItem2] != null)
+			g2.drawImage(tile[objFloor.inv[selectedItem2].id], x*tW, y*tH, null);
 	}
 	
 	private static void makeItems()
@@ -471,6 +436,7 @@ public class Game extends JPanel
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
 					objFloor.Player.y = objFloor.Player.y - 1;
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+					aiMove();
 					frame.getContentPane().validate();
 					frame.getContentPane().repaint();
 				}
@@ -482,6 +448,7 @@ public class Game extends JPanel
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
 					objFloor.Player.y = objFloor.Player.y + 1;
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+					aiMove();
 					frame.getContentPane().validate();
 					frame.getContentPane().repaint();
 				}
@@ -493,6 +460,7 @@ public class Game extends JPanel
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
 					objFloor.Player.x = objFloor.Player.x - 1;
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+					aiMove();
 					frame.getContentPane().validate();
 					frame.getContentPane().repaint();
 				}
@@ -504,11 +472,80 @@ public class Game extends JPanel
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
 					objFloor.Player.x = objFloor.Player.x + 1;
 					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+					aiMove();
 					frame.getContentPane().validate();
 					frame.getContentPane().repaint();
 				}
 				break;
 		}
+	}
+	
+	public static void aiMove()
+	{
+		for(int i =0; i<currentRoom.actors.length; i++)
+		{
+			if(currentRoom.actors[i] != null)
+			{
+				Actor currentActor = currentRoom.actors[i];
+				if(Math.random() > 0.5)
+				{
+					if(currentActor.x > objFloor.Player.x
+					&& aiCanMove('x', -1, currentActor))
+					{
+						currentRoom.mapActors[currentActor.y][currentActor.x] = 0;
+						currentActor.x--;
+						currentRoom.mapActors[currentActor.y][currentActor.x] = currentActor.actorID;
+					}
+					else if(aiCanMove('x', 1, currentActor))
+					{
+						currentRoom.mapActors[currentActor.y][currentActor.x] = 0;
+						currentActor.x++;
+						currentRoom.mapActors[currentActor.y][currentActor.x] = currentActor.actorID;
+					}
+				}
+				else
+				{
+					if(currentActor.y > objFloor.Player.y
+					&& aiCanMove('y', -1, currentActor))
+					{
+						currentRoom.mapActors[currentActor.y][currentActor.x] = 0;
+						currentActor.y--;
+						currentRoom.mapActors[currentActor.y][currentActor.x] = currentActor.actorID;
+					}
+					else if(aiCanMove('y', 1, currentActor))
+					{
+						currentRoom.mapActors[currentActor.y][currentActor.x] = 0;
+						currentActor.y++;
+						currentRoom.mapActors[currentActor.y][currentActor.x] = currentActor.actorID;
+					}
+				}
+				currentRoom.actors[i] = currentActor;
+			}
+		}
+	}
+	
+	public static boolean aiCanMove(char axis, int i, Actor currentActor)
+	{
+		//put checks here!
+		if(axis == 'x')
+		{
+			return (
+				(currentActor.x - objFloor.Player.x != 0) &&
+				(currentActor.x + i < 20 && currentActor.x + i > -1) &&
+				(currentRoom.mapActors[currentActor.y][currentActor.x + i] == 0) &&
+				(currentRoom.mapObjects[currentActor.y][currentActor.x + i] == 0)
+			);
+		}
+		else if(axis == 'y')
+		{
+			return (
+				(currentActor.y - objFloor.Player.y != 0) &&
+				(currentActor.y + i < 15 && currentActor.y + 1 > -1) &&
+				(currentRoom.mapActors[currentActor.y + i][currentActor.x] == 0) &&
+				(currentRoom.mapObjects[currentActor.y + i][currentActor.x] == 0)
+			);
+		}
+		return false;
 	}
 	
 	public static void pickUp()
@@ -557,13 +594,16 @@ public class Game extends JPanel
 	
 	public static void drop()
 	{
-		System.out.println("Dropping item");
-		if(currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] == 0)
+		if(currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] == 0 && objFloor.inv[selectedItem] != null)
 		{
+			System.out.println("Dropping item");
 			int itemIndex = 0;
-			for(int i=0; currentRoom.items[i] != null; i++)
+			while(true)
 			{
-				itemIndex = i;
+				if(currentRoom.items[itemIndex] != null)
+					itemIndex++;
+				else if(currentRoom.items[itemIndex] == null)
+					break;
 			}
 			objFloor.inv[selectedItem].x = objFloor.Player.x;
 			objFloor.inv[selectedItem].y = objFloor.Player.y;
@@ -623,6 +663,8 @@ public class Game extends JPanel
 			return false;
 	}
 
+	
+	
 	private static Image importImage(String filePath)
 	{
 		ImageIcon img = null; //Creating a null object
@@ -662,6 +704,7 @@ public class Game extends JPanel
 		}
 		tile[0] = tile[171]; //Making tile 0 transparent (air)
 		markerTile = resizeImage(tile[2276], tW/2, tH/2);
+		markerTile2 = resizeImage(tile[2273], tW/2, tH/2);
 	}
 
 	private static BufferedImage resizeImage(BufferedImage originalImage, int x, int y)

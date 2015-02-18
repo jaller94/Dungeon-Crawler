@@ -2,7 +2,7 @@
 
 	Handles the connection between Game class
 	and Rooms.
-	Also holds persistant data i.e. Player Actor && Inventory
+	Also holds persistent data i.e. Player Actor && Inventory
 	
 */
 
