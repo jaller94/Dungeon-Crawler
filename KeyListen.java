@@ -61,6 +61,8 @@ public class KeyListen implements KeyListener
 			Game.pickUp();
 		if(e.getKeyChar() == 'q')
 			Game.drop();
+		if(e.getKeyChar() == 'Q')
+			Game.drop2();
 		
 		if(e.getKeyChar() == Action.DEBUG.keyChar())
 			Game.debug();

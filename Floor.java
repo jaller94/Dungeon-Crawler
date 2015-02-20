@@ -22,8 +22,13 @@ public class Floor
 		this.mapY = mapY;
 	}
 	
-	public void genMap(int mapID)
+	public void genMap(int mapID, int mapX, int mapY)
 	{
-		maps[mapX][mapY] = new Room(mapID);
+		this.mapX = mapX;
+		this.mapY = mapY;
+		System.out.println("genMap called");
+		System.out.println("MapX = " + mapX);
+		System.out.println("MapY = " + mapY);
+		maps[mapY][mapX] = new Room(mapID);
 	}
 }

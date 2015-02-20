@@ -32,6 +32,7 @@ public class Actor
 	
 	public String name = null;
 	
+	public int hp;
 	
 	public Actor(int actorID, int x, int y)
 	{
@@ -55,11 +56,19 @@ public class Actor
 		{
 			//Case 0 creates the player
 			case 0:
+				this.name = "The Player";
 				this.actorType = 0;
+				this.hp = 5;
+				this.skin = 1482;
+				this.pants = 1502;
+				this.hat = 1794;
+				this.weapon = 0;
+				this.shield = 0;
 				break;
 			case 1:
-				this.name = "Green Slime"
+				this.name = "Green Slime";
 				this.actorType = 1;
+				this.hp = 3;
 				this.skin = 1824;
 				this.pants = 0;
 				this.armor = 0;
@@ -68,7 +77,7 @@ public class Actor
 				this.shield = 0;
 				break;
 			case 666:
-				this.name = "Bad-ass Blue Bitch"
+				this.name = "Bad-ass Blue Bitch";
 				this.actorType = -1;
 				this.skin = 1710;
 				this.pants = 1503;

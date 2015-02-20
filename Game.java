@@ -6,48 +6,22 @@ import java.io.*;
 import java.util.Arrays;
 
 /*
-
-	Changelog @ February 16, 2015
-		-GUI Started
-			-Picked up items display on inventory
-			-Hotbar created
-			
-	Issues @ February 16, 2015
-		-No known issues
-	
-	ToDo @ February 16, 2015
-		-Begin making 5 basic maps
-			-4 basic maps
-			-1 entrance map
-		-Work on Room-level Movement
-			-Static inventory
-			-Save state of actors, items, objects, ect.
-				-Should not revert to template map!
-		~Create GUI
-			-Allow item selection
-				-Identify item selection
-			-Drop selected item
-		-Interaction with Actors
-			-Attacking
-			-Player HP
-			-NPC HP (Randomly Generated)
-			-AC?
-			-Damage Types? (Slashing, Blunt, Stabbing, Piercing)
-			-AI
-				-Movement
-					-Path-finding
-						-Calculate Hypotenuse
-						-Get X/Y Differences
-						-Fulfil
-						-Object Avoidance
-				-Attacking
-					-Player is near?
-					-When to put in the line of methods
-					
-	Changelot @ February 17, 2015
-		-Graphics now scale based on tW and tH
-			-Scales properly based on this
-
+	Changelog @ February 20, 2015
+		-GUI markers changed
+		-Limited AI Implimented
+			-Only moves
+			-No combat implemented
+		-Room-level movement added
+			-Player can now move between rooms, and only on allowed axis
+			-Each room has booleans North, south, east, west, used to defind allowed axis of movement
+	ToDO @ February 20, 2015
+		-Build more rooms
+			-Build by "region"
+				-Store region in 2d array
+				-[Region][Map]
+		-Combat system
+	Issues @ February 20, 2015
+		-None known!
 */
 
 public class Game extends JPanel
@@ -89,7 +63,7 @@ public class Game extends JPanel
 	{
 		makeTiles();
 		
-		newRoom(0);
+		newRoom(0, mapX, mapY);
 		
 		Game panel = new Game();
 		
@@ -116,13 +90,97 @@ public class Game extends JPanel
 	{
 		this.frame = new JFrame("0c370tRPG");
 	}
-		
-	private static void newRoom(int mapID)
+
+	/**
+	* Checks to see if the player is leaving the room
+	* then updates the map if needed
+	* @param	direction	gives the direction the player is moving in
+	* @return				Returns a boolean so it can be used in an if statement
+	*/
+	public static boolean checkRoom(int direction)
 	{
-		objFloor.genMap(mapID);
-		currentRoom = objFloor.maps[objFloor.mapY][objFloor.mapX];
+		int dX = 0, dY = 0;
+		boolean north = false;
+		boolean south= false;
+		boolean east= false;
+		boolean west= false;
+		switch(direction)
+		{
+			case 1:
+				dY = -1;
+				dX = 0;
+				south = true;
+				break;
+			case 2:
+				dY = +1;
+				dX = 0;
+				north = true;
+				break;
+			case 3:
+				dY = 0;
+				dX = -1;
+				west = true;
+				break;
+			case 4:
+				dY = 0;
+				dX = +1;
+				east = true;
+				break;
+		}
+		if(
+		   ((objFloor.Player.x + dX >= 20 && east == currentRoom.west) || 
+			(objFloor.Player.x <= 0 && west == currentRoom.east)) &&
+			(mapX + dX > -1 && mapX + dX <10) &&
+			(mapY + dY > -1 && mapY + dY <10)
+		) {
+			currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
+			objFloor.maps[mapY][mapX] = currentRoom;
+			currentRoom = null;
+			mapY = mapY + dY;
+			mapX = mapX + dX;
+			if(objFloor.maps[mapY][mapX] == null)
+			{
+				newRoom(1, mapX, mapY);
+				makeActors();
+				makeItems();
+			}
+			if(objFloor.maps[mapY][mapX] != null)
+			{
+				currentRoom = objFloor.maps[mapY][mapX];
+				currentRoom.mapActors = objFloor.maps[mapY][mapX].mapActors;
+			}	
+			if(dX == 1)
+				objFloor.Player.x = 0;
+			else if(dX == -1)
+				objFloor.Player.x = 19;
+			currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+			if(currentRoom != null)
+			{
+				System.out.println("mapActors exists == " + String.valueOf(currentRoom.mapActors == null));
+				frame.getContentPane().validate();
+				frame.getContentPane().repaint();
+				return true;
+			}
+		}
+		return false;
+		
 	}
 	
+	/**
+	* Generates a new room and sets currentRoom to the new room
+	* @param 	mapID		Inputs the id number of the map to be generated
+	* @param	mapX		X position within the floor
+	* @param	mapY		Y position within the floor
+	*/
+	private static void newRoom(int mapID,int mapX, int mapY)
+	{
+		objFloor.genMap(mapID, mapX, mapY);
+		currentRoom = objFloor.maps[mapY][mapX];
+	}
+	
+	/**
+	* Draws the GUI onto JFrame
+	*/	
 	private static void drawGUI()
 	{
 		/*
@@ -180,6 +238,9 @@ public class Game extends JPanel
 		g2.drawImage(markerTile2, (6+selectedItem2)*tW + (tW/3), 14*tH, null);
 	}
 	
+	/**
+	* Draws the bottom layer of the map onto JFrame
+	*/
 	private static void drawMap()
 	{
 		for(int j=0; j<15; j++)
@@ -191,7 +252,10 @@ public class Game extends JPanel
 			}
 		}
 	}
-	
+
+	/**
+	* Draws objects from the object array onto JFrame
+	*/
 	private static void drawObjects()
 	{
 		for(int j=0; j<15; j++)
@@ -203,6 +267,10 @@ public class Game extends JPanel
 		}
 	}
 
+	/**
+	* Sets the active item #1
+	* @param	input		The key that has been pressed, (1,2,3,4,5,6,7,8)
+	*/
 	public static void select(int input)
 	{
 		if(selectedItem2 != input - 1)
@@ -212,6 +280,10 @@ public class Game extends JPanel
 		frame.getContentPane().repaint();
 	}
 	
+	/**
+	* Sets the active item #2
+	* @param	input		The key that has been pressed, (1,2,3,4,5,6,7,8)
+	*/
 	public static void select2(int input)
 	{
 		if(selectedItem != input - 1)
@@ -221,6 +293,9 @@ public class Game extends JPanel
 		frame.getContentPane().repaint();
 	}
 	
+	/**
+	* Draws the Player
+	*/
 	private static void drawPlayer()
 	{
 		int x = objFloor.Player.x;
@@ -234,7 +309,10 @@ public class Game extends JPanel
 		if(objFloor.inv[selectedItem2] != null)
 			g2.drawImage(tile[objFloor.inv[selectedItem2].id], x*tW, y*tH, null);
 	}
-	
+
+	/**
+	* Generates the items, getting locations from mapItems
+	*/
 	private static void makeItems()
 	{
 		int p = 0;
@@ -252,7 +330,10 @@ public class Game extends JPanel
 		}
 		itemsMade = true;
 	}
-	
+
+	/**
+	* Generates actors, getting locations from mapActors
+	*/
 	private static void makeActors()
 	{
 		int actorIndex = 0;
@@ -284,6 +365,10 @@ public class Game extends JPanel
 		actorsMade = true;
 	}
 
+	/**
+	* Creates and runs a thread that updates the map render
+	*/
+	
 	private static void updateDisplay()
 	{
 		Runnable r = new Runnable()
@@ -298,27 +383,27 @@ public class Game extends JPanel
 				{
 					for(int i=0; i<20; i++)
 					{
-						if(Game.currentRoom.mapObjects[j][i] !=0)
+						if(currentRoom.mapObjects[j][i] !=0)
 						{
-							g2D.drawImage(tile[Game.currentRoom.mapObjects[j][i]], i*tW, j*tH, null);
+							g2D.drawImage(tile[currentRoom.mapObjects[j][i]], i*tW, j*tH, null);
 						}
 					}
 				}					
 
 				//Items
-				for(int itemIndex = 0; Game.currentRoom.items[itemIndex] != null; itemIndex++)
+				for(int itemIndex = 0; currentRoom.items[itemIndex] != null; itemIndex++)
 				{
-					int itemX = Game.currentRoom.items[itemIndex].x;
-					int itemY = Game.currentRoom.items[itemIndex].y;
-					g2D.drawImage(tile[Game.currentRoom.mapItems[itemY][itemX]], itemX*tW, itemY*tH, null);
+					int itemX = currentRoom.items[itemIndex].x;
+					int itemY = currentRoom.items[itemIndex].y;
+					g2D.drawImage(tile[currentRoom.mapItems[itemY][itemX]], itemX*tW, itemY*tH, null);
 				}
 				//Actors
-				for(int actorIndex = 0; Game.currentRoom.actors[actorIndex] != null; actorIndex++)	
+				for(int actorIndex = 0; currentRoom.actors[actorIndex] != null; actorIndex++)	
 				{
-					Actor currentActor = Game.currentRoom.actors[actorIndex];
+					Actor currentActor = currentRoom.actors[actorIndex];
 					int actorX = currentActor.x;
 					int actorY = currentActor.y;
-					if(Game.currentRoom.mapActors[actorY][actorX] != -1)
+					if(currentRoom.mapActors[actorY][actorX] != -1)
 					{
 						g2D.drawImage(tile[currentActor.skin], actorX*tW, actorY*tH, null);
 						g2D.drawImage(tile[currentActor.pants], actorX*tW, actorY*tH, null);
@@ -347,6 +432,9 @@ public class Game extends JPanel
 		}
 	}
 
+	/**
+	* Runs all methods needed to update the map
+	*/	
 	private static void updateRoom()
 	{
 		drawMap();
@@ -357,7 +445,10 @@ public class Game extends JPanel
 		if(!itemsMade)
 			makeItems();
 	}
-	
+
+	/**
+	* Prints useful information to the console
+	*/
 	public static void debug()
 	{
 		System.out.println("==================================");
@@ -384,7 +475,10 @@ public class Game extends JPanel
 			System.out.println("Player item " + i+ " has damage: " + objFloor.inv[i].dmg);
 		}
 	}
-	
+
+	/**
+	* Prints even more useful information to the map
+	*/
 	public static void debugXtra()
 	{
 		debug();
@@ -414,9 +508,41 @@ public class Game extends JPanel
 			boolean output = (objFloor.inv[i] == null);
 			System.out.print(String.valueOf(output) + ", ");
 		}
+		System.out.println("");
+		System.out.println("----------------------------------");
+		System.out.println("Map information:");
+		System.out.println("Map Exsits:");
+		for(int i=0; i<objFloor.maps[0].length; i++)
+		{
+			System.out.print("\n(" + String.valueOf(objFloor.maps[i][0]!=null));
+			for(int j=1; j<objFloor.maps[1].length; j++)
+				System.out.print(",  " + String.valueOf(objFloor.maps[i][j]!=null));
+			System.out.print(")");
+		}
 		System.out.println("");		
+		System.out.println("MapID (blank if doesn't exist)");
+		for(int i=0; i<objFloor.maps[0].length; i++)
+		{
+			if(objFloor.maps[i][0] != null)
+				System.out.print("(" + objFloor.maps[i][0].mapID);
+			else
+				System.out.print("( ");
+			for(int j=1; j<objFloor.maps[1].length; j++)
+			{
+				if(objFloor.maps[i][j] != null)//Error here!!
+					System.out.print(", " + objFloor.maps[i][j].mapID);
+				else
+					System.out.print(",  ");
+				if(j == objFloor.maps[0].length - 1)
+					System.out.print(")\n");
+			}
+		}
 	}
 	
+	/**
+	* Checks and modifies player position
+	* @param direction		Defines which direction the player is going
+	*/
 	public static void move(int direction)
 	{
 		/*
@@ -427,59 +553,67 @@ public class Game extends JPanel
 		4 - Right
 		
 		*/
-		switch(direction)
+		
+		if(!checkRoom(direction));
 		{
-			case 1:
-				if(objFloor.Player.y - 1 > -1
-				&& canMove(direction))
-				{
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
-					objFloor.Player.y = objFloor.Player.y - 1;
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
-					aiMove();
-					frame.getContentPane().validate();
-					frame.getContentPane().repaint();
-				}
-				break;
-			case 2:
-				if(objFloor.Player.y + 1 < 15
-				&& canMove(direction))
-				{
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
-					objFloor.Player.y = objFloor.Player.y + 1;
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
-					aiMove();
-					frame.getContentPane().validate();
-					frame.getContentPane().repaint();
-				}
-				break;
-			case 3:
-				if(objFloor.Player.x - 1 > -1
-				&& canMove(direction))
-				{
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
-					objFloor.Player.x = objFloor.Player.x - 1;
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
-					aiMove();
-					frame.getContentPane().validate();
-					frame.getContentPane().repaint();
-				}
-				break;
-			case 4:
-				if(objFloor.Player.x + 1 < 20
-				&& canMove(direction))
-				{
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
-					objFloor.Player.x = objFloor.Player.x + 1;
-					currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
-					aiMove();
-					frame.getContentPane().validate();
-					frame.getContentPane().repaint();
-				}
-				break;
+			switch(direction)
+			{
+				case 1:
+					if(objFloor.Player.y - 1 > -1
+					&& canMove(direction))
+					{
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
+						objFloor.Player.y = objFloor.Player.y - 1;
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+						aiMove();
+						frame.getContentPane().validate();
+						frame.getContentPane().repaint();
+					}
+					break;
+				case 2:
+					if(objFloor.Player.y + 1 < 15
+					&& canMove(direction))
+					{
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
+						objFloor.Player.y = objFloor.Player.y + 1;
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+						aiMove();
+						frame.getContentPane().validate();
+						frame.getContentPane().repaint();
+					}
+					break;
+				case 3:
+					if(objFloor.Player.x - 1 > -1
+					&& canMove(direction))
+					{
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
+						objFloor.Player.x = objFloor.Player.x - 1;
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+						aiMove();
+						frame.getContentPane().validate();
+						frame.getContentPane().repaint();
+					}
+					break;
+				case 4:
+					if(objFloor.Player.x + 1 < 20
+					&& canMove(direction))
+					{
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = 0;
+						objFloor.Player.x = objFloor.Player.x + 1;
+						currentRoom.mapActors[objFloor.Player.y][objFloor.Player.x] = -1;
+						aiMove();
+						frame.getContentPane().validate();
+						frame.getContentPane().repaint();
+					}
+					break;
+			}
 		}
 	}
 	
+	
+	/**
+	* Handles movement of actors, and contains the AI
+	*/
 	public static void aiMove()
 	{
 		for(int i =0; i<currentRoom.actors.length; i++)
@@ -524,6 +658,13 @@ public class Game extends JPanel
 		}
 	}
 	
+	/**
+	* Performs checks of the AI's movement to keep within bounds
+	* @param axis			Defines axis of movement
+	* @param i 				Determines directions (Valid inputs are 1 || -1)
+	* @param currentActor	input the actor to be checked
+	* @return 				Either the Ai can move (true) or it can't (false)
+	*/
 	public static boolean aiCanMove(char axis, int i, Actor currentActor)
 	{
 		//put checks here!
@@ -548,6 +689,9 @@ public class Game extends JPanel
 		return false;
 	}
 	
+	/**
+	* Handles picking up of items into Player inventory from the map
+	*/
 	public static void pickUp()
 	{
 		if(currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] != 0)
@@ -592,6 +736,9 @@ public class Game extends JPanel
 		}
 	}
 	
+	/**
+	* Handles the dropping of items from the inventory to the map
+	*/
 	public static void drop()
 	{
 		if(currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] == 0 && objFloor.inv[selectedItem] != null)
@@ -614,16 +761,47 @@ public class Game extends JPanel
 		frame.getContentPane().validate();
 		frame.getContentPane().repaint();
 	}
+
+	/**
+	* Handles the dropping of items from the inventory to the map
+	* This drops selectedItem2
+	*/
+	public static void drop2()
+	{
+		if(currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] == 0 && objFloor.inv[selectedItem2] != null)
+		{
+			System.out.println("Dropping item");
+			int itemIndex = 0;
+			while(true)
+			{
+				if(currentRoom.items[itemIndex] != null)
+					itemIndex++;
+				else if(currentRoom.items[itemIndex] == null)
+					break;
+			}
+			objFloor.inv[selectedItem2].x = objFloor.Player.x;
+			objFloor.inv[selectedItem2].y = objFloor.Player.y;
+			currentRoom.items[itemIndex] = objFloor.inv[selectedItem2];
+			currentRoom.mapItems[objFloor.Player.y][objFloor.Player.x] = objFloor.inv[selectedItem2].id;
+			objFloor.inv[selectedItem2] = null;
+		}
+		frame.getContentPane().validate();
+		frame.getContentPane().repaint();
+	}	
 	
 	public void paint(Graphics g)
 	{
 		Graphics2D g2 = (Graphics2D)g;
 		Game.g2 = g2;
 		updateRoom();
-//		AI Method goes here!
 		updateDisplay();
 	}
 
+	/**
+	* Checks if the player's movement would be valid
+	* @param	direction	direction of player's movement
+	* @return 				can move or can't move
+	*/
 	private static boolean canMove(int direction)
 	{
 		/*
@@ -654,10 +832,11 @@ public class Game extends JPanel
 				dX = +1;
 				break;
 		}
-		//Put any extra checks here, modifying player position by adding dX and dY
-		if( currentRoom.mapActors[objFloor.Player.y  + dY][objFloor.Player.x + dX] == 0
-		 && (currentRoom.mapObjects[objFloor.Player.y + dY][objFloor.Player.x + dX] == 0
-		 ||  currentRoom.mapObjects[objFloor.Player.y + dY][objFloor.Player.x + dX] == 975))	
+
+	
+	//Put any extra checks here, modifying player position by adding dX and dY
+		if(currentRoom.mapActors[objFloor.Player.y  + dY][objFloor.Player.x + dX] == 0
+		&& currentRoom.mapObjects[objFloor.Player.y + dY][objFloor.Player.x + dX] == 0)
 			return true;
 		else
 			return false;
@@ -703,8 +882,8 @@ public class Game extends JPanel
 			}
 		}
 		tile[0] = tile[171]; //Making tile 0 transparent (air)
-		markerTile = resizeImage(tile[2276], tW/2, tH/2);
-		markerTile2 = resizeImage(tile[2273], tW/2, tH/2);
+		markerTile = resizeImage(toBufferedImage(importImage("Resources/Marker1.png")), tW/2, tH/2);
+		markerTile2 = resizeImage(toBufferedImage(importImage("Resources/Marker2.png")), tW/2, tH/2);
 	}
 
 	private static BufferedImage resizeImage(BufferedImage originalImage, int x, int y)
